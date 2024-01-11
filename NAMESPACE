@@ -1,0 +1,6 @@
+useDynLib(Apoderoides, .registration=TRUE)
+exportPattern("^[[:alpha:]]+")
+import(utils,RcppProgress,ape)
+importFrom(Rcpp,sourceCpp)
+#It is not my intention to export all the functions, but the cuurent version of Rstudio cannot build a package with an internal function which is not exported and documented.
+#export(calc.Score,deleteAnomaly,autoDeletion,getRankCentroid,getAllCentroids)
