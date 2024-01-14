@@ -1,1 +1,7 @@
-ver.1.0.0: First release.
+ver.1.0.1:
+Fixed a bug which hindered installation of Apoderoides in most MacOSes.
+Added a text about OpenMP for MacOS in the vignette.
+Fixed a bug which might cause unexpected wrap-around in some compilers.
+Added \value to the document of the internal functions.
+ver.1.0.0:
+First release.

@@ -17,4 +17,7 @@
 \details{
 These are not to be called by the user.
 }
+\value{
+Different values, depending on the function.
+}
 \keyword{ts}

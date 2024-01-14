@@ -1,5 +1,7 @@
 #include <Rcpp.h>
-#include <omp.h>
+#ifdef _OPENMP
+  #include <omp.h>
+#endif
 #include <progress.hpp>
 #include <vector>
 #include <algorithm>
@@ -75,10 +77,15 @@ std::vector<int> connect_C (std::vector<int> vec1,std::vector<int> vec2)
 std::vector<int> rootPathIntersect(std::vector<int> vec1,std::vector<int> vec2)
 {
   std::vector<int> result;
+  //skip to avoid the case in which vec2.size() - 1 will be negative
+  if(vec2.size()==0)
+  {
+    return(result);
+  }
   result.reserve(std::min(vec1.size(),vec2.size()));
   for(unsigned int i = 0, size = vec1.size(); i < size; ++i)
   {
-    if(vec2.size() - 1 -i < 0)
+    if(vec2.size() - 1 < i)
     {
       break;
     }

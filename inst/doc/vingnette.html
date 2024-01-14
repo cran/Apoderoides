@@ -12,7 +12,7 @@
 
 <meta name="author" content="Satoshi Aoki" />
 
-<meta name="date" content="2024-01-11" />
+<meta name="date" content="2024-01-12" />
 
 <title>Apoderoides Tutorial</title>
 
@@ -340,7 +340,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Apoderoides Tutorial</h1>
 <h4 class="author"><a href="https://sites.google.com/view/s-aoki">Satoshi Aoki</a></h4>
-<h4 class="date">2024-01-11</h4>
+<h4 class="date">2024-01-12</h4>
 
 
 
@@ -491,9 +491,16 @@ deleted.</p>
 and <code>num_threads</code>. <code>show_progress</code> is a boolean
 (TRUE or FALSE) and TRUE by default. When it is TRUE, the progress of
 calculation is reported on the R console. When it is FALSE, it provides
-no reports but the calculation will be slightly faster.
-<code>num_threads</code> is an integer and 1 by default. You can specify
-the number of threads for faster calculation.</p>
+no reports but the calculation will be slightly faster.</p>
+<p><code>num_threads</code> is a positive integer and 1 by default. You
+can specify the number of threads for faster calculation by this
+argument. However, this option validly works only when OpenMP is
+available, and the default compiler in MacOS does not support OpenMP.
+Single thread calculation is still available for MacOS, but if you want
+to use multiple threads in MacOS, you need to get OpenMP. One way to
+install OpenMP is using following commands in the terminal:</p>
+<pre eval="FALSE"><code>/bin/bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)&quot;
+brew install libomp</code></pre>
 <p>The function <code>calc.Score()</code> also has an argument of
 <code>sort</code>. <code>sort</code> is a boolean and TRUE by default.
 When it is FALSE, the resultant score is no longer sorted by the
