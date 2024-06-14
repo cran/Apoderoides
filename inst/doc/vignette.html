@@ -12,7 +12,7 @@
 
 <meta name="author" content="Satoshi Aoki" />
 
-<meta name="date" content="2024-01-12" />
+<meta name="date" content="2024-06-14" />
 
 <title>Apoderoides Tutorial</title>
 
@@ -51,7 +51,7 @@ overflow: visible;
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -340,7 +340,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Apoderoides Tutorial</h1>
 <h4 class="author"><a href="https://sites.google.com/view/s-aoki">Satoshi Aoki</a></h4>
-<h4 class="date">2024-01-12</h4>
+<h4 class="date">2024-06-14</h4>
 
 
 
@@ -348,9 +348,10 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h2>1 Aim of this package, Apoderoides</h2>
 <p>Apoderoides is an R package for finding and deleting erroneous taxa
 from a phylogenetic tree by calculating scores for each taxa. The score
-shows how erroneous the taxon and can prioritize which taxon should be
-deleted first. Apoderoides especially focuses on erroneous taxa caused
-by taxon mistake or misidentification.</p>
+shows how erroneous the taxon for the monophyly of ranks and can
+prioritize which taxon should be deleted first. Apoderoides especially
+focuses on erroneous taxa caused by taxon mistake or
+misidentification.</p>
 </div>
 <div id="installation" class="section level2">
 <h2>2 Installation</h2>
@@ -383,19 +384,23 @@ command:</p>
 <span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">calc.Score</span>(testTree)</span>
 <span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#for the user imported tree</span></span>
 <span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="fu">calc.Score</span>(tree)</span></code></pre></div>
-<p>Here, let’s have a look at the top 10 scores of the test tree.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">calc.Score</span>(testTree,<span class="at">show_progress=</span><span class="cn">FALSE</span>)[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,]</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co">#&gt;       OTU                            perCladeOTUScore sum   intruder outlier</span></span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt;  [1,] &quot;Araucaria_cunninghamii&quot;       &quot;248&quot;            &quot;248&quot; &quot;0&quot;      &quot;248&quot;  </span></span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt;  [2,] &quot;Thuja_orientalis&quot;             &quot;21&quot;             &quot;21&quot;  &quot;1&quot;      &quot;20&quot;   </span></span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt;  [3,] &quot;Callitropsis_vietnamensis&quot;    &quot;7&quot;              &quot;7&quot;   &quot;0&quot;      &quot;7&quot;    </span></span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt;  [4,] &quot;Callitropsis_funebris&quot;        &quot;6&quot;              &quot;6&quot;   &quot;0&quot;      &quot;6&quot;    </span></span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt;  [5,] &quot;Goniophlebium_niponicum&quot;      &quot;5&quot;              &quot;5&quot;   &quot;0&quot;      &quot;5&quot;    </span></span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt;  [6,] &quot;Dryopteris_crassirhizoma&quot;     &quot;4&quot;              &quot;4&quot;   &quot;0&quot;      &quot;4&quot;    </span></span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt;  [7,] &quot;Thelypteris_aurita&quot;           &quot;4&quot;              &quot;4&quot;   &quot;0&quot;      &quot;4&quot;    </span></span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt;  [8,] &quot;Thelypteris_decursivepinnata&quot; &quot;4&quot;              &quot;4&quot;   &quot;0&quot;      &quot;4&quot;    </span></span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt;  [9,] &quot;Cyclosorus_dentatus&quot;          &quot;4&quot;              &quot;4&quot;   &quot;1&quot;      &quot;3&quot;    </span></span>
-<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; [10,] &quot;Juniperus_chinensis&quot;          &quot;3&quot;              &quot;3&quot;   &quot;1&quot;      &quot;2&quot;    </span></span>
+<p>calc.Score() function returns a list of size two, containing two sets
+of scores based on the centroid and most recent common ancestor (MRCA)
+of checking ranks. In the above codes, we are checking the genus rank.
+Here, let’s have a look at the top 10 scores of the test tree based on
+the centroid.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">calc.Score</span>(testTree,<span class="at">show_progress=</span><span class="cn">FALSE</span>)[[<span class="dv">1</span>]][<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,]</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co">#&gt;       OTU                         perCladeOTUScore sum   intruder outlier</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt;  [1,] &quot;Araucaria_cunninghamii&quot;    &quot;248&quot;            &quot;248&quot; &quot;0&quot;      &quot;248&quot;  </span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt;  [2,] &quot;Thuja_orientalis&quot;          &quot;21&quot;             &quot;21&quot;  &quot;1&quot;      &quot;20&quot;   </span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt;  [3,] &quot;Callitropsis_vietnamensis&quot; &quot;7&quot;              &quot;7&quot;   &quot;0&quot;      &quot;7&quot;    </span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt;  [4,] &quot;Callitropsis_funebris&quot;     &quot;6&quot;              &quot;6&quot;   &quot;0&quot;      &quot;6&quot;    </span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt;  [5,] &quot;Goniophlebium_niponicum&quot;   &quot;5&quot;              &quot;5&quot;   &quot;0&quot;      &quot;5&quot;    </span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt;  [6,] &quot;Dryopteris_crassirhizoma&quot;  &quot;4&quot;              &quot;4&quot;   &quot;0&quot;      &quot;4&quot;    </span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt;  [7,] &quot;Cyclosorus_dentatus&quot;       &quot;4&quot;              &quot;4&quot;   &quot;1&quot;      &quot;3&quot;    </span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt;  [8,] &quot;Juniperus_chinensis&quot;       &quot;3&quot;              &quot;3&quot;   &quot;1&quot;      &quot;2&quot;    </span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt;  [9,] &quot;Pteris_vittata&quot;            &quot;2&quot;              &quot;2&quot;   &quot;0&quot;      &quot;2&quot;    </span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; [10,] &quot;Thelypteris_aurita&quot;        &quot;2&quot;              &quot;2&quot;   &quot;0&quot;      &quot;2&quot;    </span></span>
 <span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt;       #clade</span></span>
 <span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt;  [1,] &quot;136&quot; </span></span>
 <span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt;  [2,] &quot;121&quot; </span></span>
@@ -403,10 +408,10 @@ command:</p>
 <span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="co">#&gt;  [4,] &quot;123&quot; </span></span>
 <span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co">#&gt;  [5,] &quot;65&quot;  </span></span>
 <span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="co">#&gt;  [6,] &quot;49&quot;  </span></span>
-<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="co">#&gt;  [7,] &quot;79&quot;  </span></span>
-<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co">#&gt;  [8,] &quot;81&quot;  </span></span>
-<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="co">#&gt;  [9,] &quot;87&quot;  </span></span>
-<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a><span class="co">#&gt; [10,] &quot;125&quot;</span></span></code></pre></div>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="co">#&gt;  [7,] &quot;87&quot;  </span></span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co">#&gt;  [8,] &quot;125&quot; </span></span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="co">#&gt;  [9,] &quot;41&quot;  </span></span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a><span class="co">#&gt; [10,] &quot;79&quot;</span></span></code></pre></div>
 <p>The columns of the calculation results show the following
 information:</p>
 <ul>
@@ -447,13 +452,13 @@ tree called by the following command:</p>
 <span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="co">#&gt;  [7] &quot;Ephedra_monosperma&quot;                  </span></span>
 <span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="co">#&gt;  [8] &quot;Cathaya_argyrophylla&quot;                </span></span>
 <span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co">#&gt;  [9] &quot;Pseudotsuga_sinensis_var._wilsoniana&quot;</span></span>
-<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="co">#&gt; [10] &quot;Larix_gmelinii&quot;</span></span>
-<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>testRankList[[<span class="dv">2</span>]][<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>]</span>
-<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a><span class="co">#&gt;  [1] &quot;Araucariaceae&quot; &quot;Araucariaceae&quot; &quot;Araucariaceae&quot; &quot;Araucariaceae&quot;</span></span>
-<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="co">#&gt;  [5] &quot;Ephedraceae&quot;   &quot;Ephedraceae&quot;   &quot;Ephedraceae&quot;   &quot;Pinaceae&quot;     </span></span>
-<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a><span class="co">#&gt;  [9] &quot;Pinaceae&quot;      &quot;Pinaceae&quot;</span></span></code></pre></div>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="co">#&gt; [10] &quot;Larix_gmelinii&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>testRankList[[<span class="dv">2</span>]][<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>]</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="co">#&gt;  [1] &quot;Araucariaceae&quot; &quot;Araucariaceae&quot; &quot;Araucariaceae&quot; &quot;Araucariaceae&quot;</span></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co">#&gt;  [5] &quot;Ephedraceae&quot;   &quot;Ephedraceae&quot;   &quot;Ephedraceae&quot;   &quot;Pinaceae&quot;     </span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co">#&gt;  [9] &quot;Pinaceae&quot;      &quot;Pinaceae&quot;</span></span></code></pre></div>
 <p>The rank list is a list of size 2. The first element is equivalent to
-a character vector of the tree tips (obtained by like
+a character vector of the tree tips (obtained by, e.g.,
 <code>testTree$tip</code>). The second element is a character vector of
 the rank names corresponding to the first element of the rank list. In
 this test data, the rank list indicates the family of the test tree
@@ -462,7 +467,7 @@ calculate the score for genus, you can calculate it by setting the genus
 names in the second element of the rank list.</p>
 <p>Using this rank list, the score of test tree for family can be
 calculated by the following command:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">calc.Score</span>(testTree,testRankList)</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">calc.Score</span>(testTree,testRankList)</span></code></pre></div>
 <p>The output can be interpreted just like the score for genus. The only
 difference is the score is based on monophyly of genus or family.</p>
 </div>
@@ -474,15 +479,15 @@ Therefore, repeating score calculation and deleting the top-score tip(s)
 until all tips have 0 scores can provide a tree without erroneous tips
 with the small number of deleted tips. The following commands conduct
 such auto deletion of erroneous taxa for the test tree:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="co">#for genus level</span></span>
-<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="fu">autoDeletion</span>(testTree)</span>
-<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="co">#for family level</span></span>
-<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="fu">autoDeletion</span>(testTree,testRankList)</span></code></pre></div>
-<p>The output of <code>autoDeletion()</code> is a list of size 3. The
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="co">#for genus level</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="fu">autoDeletion</span>(testTree)</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a><span class="co">#for family level</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="fu">autoDeletion</span>(testTree,testRankList)</span></code></pre></div>
+<p>The output of <code>autoDeletion()</code> is a list of size 4. The
 first element is the tree without erroneous tips. The second element is
-a character vector of deleted tree tips. The last element is a lists of
-scores repeatedly calculated until all the erroneous tips are
-deleted.</p>
+a character vector of deleted tree tips. The third and fourth elements
+are lists of centroid-based and MRCA-based scores repeatedly calculated
+until all the erroneous tips are deleted.</p>
 </div>
 <div id="the-other-utilities-to-help-analysis" class="section level3">
 <h3>3.4 The other utilities to help analysis</h3>

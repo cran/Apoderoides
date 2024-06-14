@@ -1,3 +1,41 @@
+#get MRCAs for all upper ranks in a tree.
+#if a rank is monophyletic, return the tip node number instead of NULL.
+getAllMRCAs<-function(tree,OTUrankData=NULL)
+{
+  allRankNames<-getAllRankNames(tree,OTUrankData)
+  allTipUpperRank<-get.upperRank(tree$tip,OTUrankData)
+  MRCAlist<-vector("list",length(allRankNames))
+  for(i in 1:length(MRCAlist))
+  {
+    #use regular expressions to conduct exact matching
+    rankTips<-grep(paste0("^",allRankNames[i],"$"),allTipUpperRank)
+    temp<-getMRCA(tree,rankTips)
+    if(is.null(temp))
+    {
+      MRCAlist[[i]]<-rankTips
+    }
+    else
+    {
+      MRCAlist[[i]]<-temp
+    }
+  }
+  return(MRCAlist)
+}
+
+#get MRCA of rankName in tree
+getRankMRCA<-function(rankName,tree,dropIndex,rankList)
+{
+  #use regular expressions to conduct exact matching
+  rankTips<-grep(paste0("^",rankName,"$"),rankList)
+  rankTips<-setdiff(rankTips,dropIndex)
+  MRCA<-getMRCA(tree,rankTips)
+  if(is.null(MRCA))
+  {
+    MRCA<-rankTips
+  }
+  return(MRCA)
+}
+
 #get upperRank from OTU name. List is necessary if getting rank upper than genus.
 #this function is vectorized for the lowerRank.
 get.upperRank<-function(data,OTUrankData=NULL)
@@ -16,17 +54,10 @@ get.upperRank<-function(data,OTUrankData=NULL)
   }
   return(result)
 }
-
-deleteAnomaly<-function(tree,score,OTUrankData=NULL,drop=FALSE)
+#load a centroid or MRCA score and return dropping OTU(s)
+deleteSubFunc<-function(tree,score,OTUrankData=NULL)
 {
-  droppingIndex<-list()
-  score<-score[order(as.numeric(score[,2]),decreasing=TRUE),]
   topOTUScore<-score[1,2][[1]]
-  #when the top OTU score is 0, return
-  if(topOTUScore==0)
-  {
-    return("No anomaly OTU in the tree.")
-  }
   #find index whose clade score is identical to the top clade score
   topScoreOTU<-score[topOTUScore==score[,2],1]
   if(length(topScoreOTU)==1)
@@ -42,7 +73,7 @@ deleteAnomaly<-function(tree,score,OTUrankData=NULL,drop=FALSE)
     #when the dropping OTU rank has one or more than two OTUs, drop the OTU with the highest score
     if(length(rankOTU)==1||length(rankOTU)>2)
     {
-      return(list(score[1,1][[1]],drop.tip(tree,score[1,1][[1]])))
+      return(score[1,1][[1]])
     }
     #when the dropping OTU rank has two OTUs, compare thier intruder score and drop one with the higher score
     else
@@ -51,36 +82,15 @@ deleteAnomaly<-function(tree,score,OTUrankData=NULL,drop=FALSE)
       int2<-score[rankOTU[2]==score[,1],4]
       if(int1>int2)
       {
-        if(drop)
-        {
-          return(list(rankOTU[1],drop.tip(tree,rankOTU[1])))
-        }
-        else
-        {
-          return(list(rankOTU[1],tree))
-        }
+        return(rankOTU[1])
       }
       else if(int2>int1)
       {
-        if(drop)
-        {
-          return(list(rankOTU[2],drop.tip(tree,rankOTU[2])))
-        }
-        else
-        {
-          return(list(rankOTU[2],tree))
-        }
+        return(rankOTU[2])
       }
       else
       {
-        if(drop)
-        {
-          return(list(rankOTU,drop.tip(tree,rankOTU)))
-        }
-        else
-        {
-          return(list(rankOTU,tree))
-        }
+        return(rankOTU)
       }
     }
   }
@@ -106,24 +116,87 @@ deleteAnomaly<-function(tree,score,OTUrankData=NULL,drop=FALSE)
       }
     }
     #cladeNumber with the smallest number of OTUs
-    candidateCladeNumber<-topScoreCladeNumber[minCladeIndex]
+    candidateCladeNumber<-as.integer(topScoreCladeNumber[minCladeIndex])
     #choose ones with the smallest clade number
     candidateCladeNumber<-candidateCladeNumber[candidateCladeNumber==min(candidateCladeNumber)]
     candidateCladeNumber<-candidateCladeNumber[1]
     deletingOTU<-score[score[,6]==candidateCladeNumber,1]
-    if(drop)
-    {
-      return(list(deletingOTU,drop.tip(tree,deletingOTU)))
-    }
-    else
-    {
-      return(list(deletingOTU,tree))
-    }
+    return(deletingOTU)
   }
 }
 
-autoDeletion<-function(tree,OTUrankData=NULL,show_progress=TRUE,num_threads=1)
+deleteAnomaly<-function(tree,scores,OTUrankData=NULL,drop=FALSE,prior="MRCA")
 {
+  droppingIndex<-list()
+  scores[[1]]<-scores[[1]][order(as.numeric(scores[[1]][,2]),decreasing=T),]
+  scores[[2]]<-scores[[2]][order(as.numeric(scores[[2]][,2]),decreasing=T),]
+
+  topOTUScore<-max(scores[[1]][1,2][[1]],scores[[2]][1,2][[1]])
+  #when the top OTU score is 0, return
+  if(topOTUScore==0)
+  {
+    return("No anomaly OTU in the tree.")
+  }
+  #when centroidScore > MRCAScore, use centroid score
+  topScore1<-as.numeric(scores[[1]][1,2][[1]])
+  topScore2<-as.numeric(scores[[2]][1,2][[1]])
+  if(topScore1>topScore2)
+  {
+    dropOTU<-deleteSubFunc(tree,scores[[1]],OTUrankData)
+  }
+  #when centroidScore < MRCAScore, use MRCA score
+  else if(topScore1<topScore2)
+  {
+    dropOTU<-deleteSubFunc(tree,scores[[2]],OTUrankData)
+  }
+  #when centroidScore == MRCAScore, compare the number of dropping OTUs and use fewer score
+  else
+  {
+    dropOTUcand1<-deleteSubFunc(tree,scores[[1]],OTUrankData)
+    dropOTUcand2<-deleteSubFunc(tree,scores[[2]],OTUrankData)
+    if(length(dropOTUcand1)<length(dropOTUcand2))
+    {
+      dropOTU<-dropOTUcand1
+    }
+    else if(length(dropOTUcand1)>length(dropOTUcand2))
+    {
+      dropOTU<-dropOTUcand2
+    }
+    #when the number of dropping OTUs are equal, use one defined by the prior argument
+    else
+    {
+      if(prior=="centroid")
+      {
+        dropOTU<-dropOTUcand1
+      }
+      else if (prior=="MRCA")
+      {
+        dropOTU<-dropOTUcand2
+      }
+      else
+      {
+        print("'prior' argument must be 'MRCA' or 'centroid'.")
+        return()
+      }
+    }
+  }
+  if(drop)
+  {
+    return(list(dropOTU,drop.tip(tree,dropOTU)))
+  }
+  else
+  {
+    return(list(dropOTU,tree))
+  }
+}
+
+autoDeletion<-function(tree,OTUrankData=NULL,show_progress=TRUE,num_threads=1,prior="MRCA")
+{
+  if(prior!="MRCA"&&prior!="centroid")
+  {
+    print("'prior' argument must be 'MRCA' or 'centroid'.")
+    return()
+  }
   if(length(tree$tip)<=3)
   {
     return("The tree includes only three or less OTUs.")
@@ -132,7 +205,8 @@ autoDeletion<-function(tree,OTUrankData=NULL,show_progress=TRUE,num_threads=1)
   {
     calcTime<-proc.time()
   }
-  totalScore<-list()
+  totalCentroidScore<-list()
+  totalMRCAScore<-list()
   droppedOTUs<-character()
   dropIndex<-integer()
   allRankNames<-getAllRankNames(tree,OTUrankData)
@@ -145,27 +219,35 @@ autoDeletion<-function(tree,OTUrankData=NULL,show_progress=TRUE,num_threads=1)
     rankList<-get.upperRank(tree$tip)
   }
   allCentroids<-getAllCentroids(tree,OTUrankData,show_progress,num_threads)
+  allMRCAs<-getAllMRCAs(tree,OTUrankData)
   counter<-1
   progress = 0
   firstPositiveScoreOTU = -1
   currentPositiveScoreOTU = 0
+  scores<-vector("list",2)
   while(TRUE)
   {
     if(length(tree$tip)<=3)
     {
       break
     }
-    score<-calc.Score(tree,OTUrankData,allRankNames,allCentroids,dropIndex,show_progress=show_progress,num_threads=num_threads)
+    scores[[1]]<-calc.Score(tree,OTUrankData,allRankNames,allCentroids,dropIndex,show_progress=show_progress,num_threads=num_threads)[[1]]
+    scores[[2]]<-calc.Score(tree,OTUrankData,allRankNames,allMRCAs,dropIndex,show_progress=show_progress,num_threads=num_threads)[[1]]
     #check the score reached 0
-    if(score[1,2][[1]]==0)
+    #somewhat if(scores[[1]][1,2][[1]]==0||scores[[2]][1,2][[1]]==0) gives an error
+    if(scores[[1]][1,2][[1]]==0)
+    {
+      break
+    }
+    if(scores[[2]][1,2][[1]]==0)
     {
       break
     }
     if(firstPositiveScoreOTU==-1)
     {
-      firstPositiveScoreOTU<-sum(score[,2]>0)
+      firstPositiveScoreOTU<-max(sum(scores[[1]][,2]>0),sum(scores[[2]][,2]>0))
     }
-    currentPositiveScoreOTU<-sum(score[,2]>0)
+    currentPositiveScoreOTU<-max(sum(scores[[1]][,2]>0),sum(scores[[2]][,2]>0))
     if(show_progress)
     {
       print(paste0("auto-deletion loop",counter))
@@ -183,8 +265,9 @@ autoDeletion<-function(tree,OTUrankData=NULL,show_progress=TRUE,num_threads=1)
       }
       counter<-counter+1
     }
-    totalScore<-append(totalScore,list(score))
-    temp<-deleteAnomaly(tree,score,OTUrankData)
+    totalCentroidScore<-append(totalCentroidScore,list(scores[[1]]))
+    totalMRCAScore<-append(totalMRCAScore,list(scores[[2]]))
+    temp<-deleteAnomaly(tree,scores,OTUrankData)
     droppedOTUs<-append(droppedOTUs,as.vector(temp[[1]]))
     #index of dropped OTU
     index<-match(temp[[1]],tree$tip)
@@ -198,6 +281,7 @@ autoDeletion<-function(tree,OTUrankData=NULL,show_progress=TRUE,num_threads=1)
       centroidTime<-proc.time()
     }
     allCentroids[[lastDropRankIndex]]<-getRankCentroid_C(lastDropRank,dropIndex,tree$tip,tree[[1]][,1],tree[[1]][,2],rankList,show_progress,num_threads)
+    allMRCAs[[lastDropRankIndex]]<-getRankMRCA(lastDropRank,tree,dropIndex,rankList)
     if(show_progress)
     {
       print(proc.time()-centroidTime)
@@ -209,7 +293,7 @@ autoDeletion<-function(tree,OTUrankData=NULL,show_progress=TRUE,num_threads=1)
     print("total time")
     print(proc.time()-calcTime)
   }
-  return(list(resultantTree=tree,droppedOTU=droppedOTUs,scoreTransition=totalScore))
+  return(list(resultantTree=tree,droppedOTU=droppedOTUs,centroidScoreTransition=totalCentroidScore,MRCAScoreTransition=totalMRCAScore))
 }
 
 getAllRankNames<-function(tree,OTUrankData=NULL)
@@ -255,7 +339,7 @@ is.monophyleticByRank<-function(tree,nodeIndex,OTUrankData)
   return(all(rank[1]==rank))
 }
 
-calc.Score<-function(tree,OTUrankData=NULL,allRankNames=NULL,allCentroids=NULL,dropIndex=NULL,sort=TRUE,show_progress=TRUE,num_threads=1)
+calc.Score<-function(tree,OTUrankData=NULL,allRankNames=NULL,allCores=NULL,dropIndex=NULL,sort=TRUE,show_progress=TRUE,num_threads=1)
 {
   OTUList<-tree$tip
   intScore<-numeric(length(OTUList))
@@ -267,9 +351,18 @@ calc.Score<-function(tree,OTUrankData=NULL,allRankNames=NULL,allCentroids=NULL,d
   cladeScore<-numeric(length(OTUList))
   #cladeScore/number of OTUs in the clade
   perCladeScore<-numeric(length(OTUList))
-  if(is.null(allCentroids))
+  if(is.null(allCores))
   {
+    scores<-vector("list",2)
+    names(scores)<-c("CentroidScore","MRCAScore")
     allCentroids<-getAllCentroids(tree,OTUrankData,show_progress,num_threads)
+    allMRCAs<-getAllMRCAs(tree,OTUrankData)
+    allCores<-list(allCentroids,allMRCAs)
+  }
+  else
+  {
+    allCores<-list(allCores)
+    scores<-vector("list",1)
   }
   if(is.null(dropIndex))
   {
@@ -285,67 +378,66 @@ calc.Score<-function(tree,OTUrankData=NULL,allRankNames=NULL,allCentroids=NULL,d
     OTUrankData[[1]]<-tree$tip
     OTUrankData[[2]]<-get.upperRank(tree$tip)
   }
-
-  isScored<-logical(length(OTUList))
-  scoreCounter<-1
-  if(show_progress)
-  {
-    #for new line
-    print("calculating score")
-    calcTime<-proc.time()
-    pb<-txtProgressBar(style=3)
-  }
   range<-1:length(OTUList)
   range<-setdiff(range,dropIndex)
-  for(i in range)
+  for(j in 1:length(scores))
   {
+    isScored<-logical(length(OTUList))
+    scoreCounter<-1
     if(show_progress)
     {
-      setTxtProgressBar(pb,i/length(range))
+      #for new line
+      print("calculating score")
+      calcTime<-proc.time()
+      pb<-txtProgressBar(style=3)
     }
-    if(isScored[i])
+    for(i in range)
     {
-      next
-    }
-    isScored[i]<-TRUE
-    cladeIndex<-i
-    nextCladeIndex<-i
-    checkingNode<-i
-    while(is.monophyleticByRank(tree,nextCladeIndex,OTUrankData))
-    {
-      cladeIndex<-nextCladeIndex
-      checkingNode<-findUpperNode(tree,checkingNode)
-      #when the checking node is the root node
-      if(length(checkingNode)==0)
+      if(show_progress)
       {
-        break
+        setTxtProgressBar(pb,i/length(range))
       }
-      nextCladeIndex<-findSubTips_C(tree$tip,tree[[1]][,1],tree[[1]][,2],checkingNode)
+      if(isScored[i])
+      {
+        next
+      }
+      isScored[i]<-TRUE
+      cladeIndex<-i
+      nextCladeIndex<-i
+      checkingNode<-i
+      while(is.monophyleticByRank(tree,nextCladeIndex,OTUrankData))
+      {
+        cladeIndex<-nextCladeIndex
+        checkingNode<-findUpperNode(tree,checkingNode)
+        #when the checking node is the root node
+        if(length(checkingNode)==0)
+        {
+          break
+        }
+        nextCladeIndex<-findSubTips_C(tree$tip,tree[[1]][,1],tree[[1]][,2],checkingNode)
+      }
+      intscore<-calcIntScore_C(tree$tip,tree[[1]][,1],tree[[1]][,2],OTUList[i],allCores[[j]],allRankNames,OTUrankData[[2]])
+      outscore<-calcOutScore_C(tree$tip,tree[[1]][,1],tree[[1]][,2],OTUList[i],allCores[[j]],allRankNames,OTUrankData[[2]],dropIndex=dropIndex)
+      intScore[cladeIndex]<-intscore
+      outScore[cladeIndex]<-outscore
+      OTUScore[cladeIndex]<-intscore+outscore
+      perCladeScore[cladeIndex]<-(intscore+outscore)/length(cladeIndex)
+      isScored[cladeIndex]<-TRUE
+      cladeNumber[cladeIndex]<-scoreCounter
+      scoreCounter<-scoreCounter+1
     }
-    intscore<-calcIntScore_C(tree$tip,tree[[1]][,1],tree[[1]][,2],OTUList[i],allCentroids,allRankNames,OTUrankData[[2]])
-    outscore<-calcOutScore_C(tree$tip,tree[[1]][,1],tree[[1]][,2],OTUList[i],allCentroids,allRankNames,OTUrankData[[2]],dropIndex=dropIndex)
-    intScore[cladeIndex]<-intscore
-    outScore[cladeIndex]<-outscore
-    OTUScore[cladeIndex]<-intscore+outscore
-    perCladeScore[cladeIndex]<-(intscore+outscore)/length(cladeIndex)
-    isScored[cladeIndex]<-TRUE
-    cladeNumber[cladeIndex]<-scoreCounter
-    scoreCounter<-scoreCounter+1
+    if(show_progress)
+    {
+      close(pb)
+      print(proc.time()-calcTime)
+    }
+    scores[[j]]<-array(c(OTUList,perCladeScore,OTUScore,intScore,outScore,cladeNumber),dim=c(length(OTUList),6))
+    scores[[j]]<-scores[[j]][order(as.numeric(scores[[j]][,6])),]
+    colnames(scores[[j]])<-c("OTU","perCladeOTUScore","sum","intruder","outlier","#clade")
+    if(sort)
+    {
+      scores[[j]]<-scores[[j]][order(as.numeric(scores[[j]][,2]),decreasing=T),]
+    }
   }
-  if(show_progress)
-  {
-    close(pb)
-    print(proc.time()-calcTime)
-  }
-  score<-array(c(OTUList,perCladeScore,OTUScore,intScore,outScore,cladeNumber),dim=c(length(OTUList),6))
-  score<-score[order(as.numeric(score[,6])),]
-  colnames(score)<-c("OTU","perCladeOTUScore","sum","intruder","outlier","#clade")
-  if(sort)
-  {
-    return(score[order(as.numeric(score[,2]),decreasing=TRUE),])
-  }
-  else
-  {
-    return(score)
-  }
+  return(scores)
 }

@@ -77,15 +77,10 @@ std::vector<int> connect_C (std::vector<int> vec1,std::vector<int> vec2)
 std::vector<int> rootPathIntersect(std::vector<int> vec1,std::vector<int> vec2)
 {
   std::vector<int> result;
-  //skip to avoid the case in which vec2.size() - 1 will be negative
-  if(vec2.size()==0)
-  {
-    return(result);
-  }
   result.reserve(std::min(vec1.size(),vec2.size()));
   for(unsigned int i = 0, size = vec1.size(); i < size; ++i)
   {
-    if(vec2.size() - 1 < i)
+    if(vec2.size() - 1 -i < 0)
     {
       break;
     }
@@ -102,7 +97,6 @@ std::vector<int> rootPathIntersect(std::vector<int> vec1,std::vector<int> vec2)
   std::reverse(result.begin(),result.end());
   return(result);
 }
-
 std::vector<int> findNodePath_C (std::vector<std::string> treeTip, std::vector<int> treeMatCol0,std::vector<int> treeMatCol1, int startTip, int goalTip)
 {
   if(startTip==goalTip)
@@ -360,7 +354,7 @@ std::vector<std::vector<double>> getAllCentroids_C (std::vector<std::string> tre
   std::vector<int> dropIndex(0);
   for(unsigned int i = 0; i < size; ++i)
   {
-    allCentroid[i] = getRankCentroid_C(allRankNames[i],dropIndex,treeTip,treeMatCol0, treeMatCol1,rankList,true,num_threads);
+    allCentroid[i] = getRankCentroid_C(allRankNames[i],dropIndex,treeTip,treeMatCol0, treeMatCol1,rankList,show_progress,num_threads);
     if(show_progress)
     {
       double progressPercent = 100*((double)i+1)/(double)size;
@@ -394,11 +388,11 @@ std::vector<int> minnodepath_C(std::vector<std::string> treeTip, std::vector<int
   return(minpath);
 }
 
-//return centroid which is nearest to the root
-int getBaseCentroid_C (std::vector<std::string> treeTip, std::vector<int> treeMatCol0,std::vector<int> treeMatCol1,std::vector<int> centroid)
+//return core node which is nearest to the root
+int getBaseCore_C (std::vector<std::string> treeTip, std::vector<int> treeMatCol0,std::vector<int> treeMatCol1,std::vector<int> core)
 {
   int rootNode = getRootNode_C(treeTip);
-  std::vector<int> temp = minnodepath_C(treeTip,treeMatCol0,treeMatCol1,rootNode,centroid);
+  std::vector<int> temp = minnodepath_C(treeTip,treeMatCol0,treeMatCol1,rootNode,core);
   return((int)temp[temp.size() - 1]);
 }
 
@@ -488,7 +482,7 @@ std::vector<int> subsetIndegamma_C(std::vector<int> vec,int target)
   return(x);
 }
 
-//obtain tips below a given node
+//obtain all tips below a given node
 // [[Rcpp::export]]
 std::vector<int> findSubTips_C (std::vector<std::string> treeTip,std::vector<int> treeMatCol0, std::vector<int> treeMatCol1,int node)
 {
@@ -537,6 +531,41 @@ inline int countNE (std::vector<std::string> vec, std::string target)
   return(result);
 }
 
+std::vector<int> getOutlierFromNodes (std::vector<std::string> treeTip,
+                                      std::vector<int> treeMatCol0,std::vector<int> treeMatCol1,std::vector<int> path)
+{
+  std::vector<int> result(0);
+  for(unsigned int i = 0; i < path.size()-1;++i)
+  {
+    int start = path[i];
+    int goal = path[i+1];
+    for(unsigned int j =0; j < treeMatCol0.size();++j)
+    {
+      //when start node is upper, path goes down
+      if(start==treeMatCol0[j] && goal==treeMatCol1[j])
+      {
+        //add subtips of start node except subtips of goal node
+        result = connect_C(result,setdiff_C(findSubTips_C(treeTip,treeMatCol0,treeMatCol1,start),findSubTips_C(treeTip,treeMatCol0,treeMatCol1,goal)));
+        break;
+      }
+      //when start node is lower, path goes up
+      if(start==treeMatCol1[j] && goal==treeMatCol0[j])
+      {
+        //add subtips of start node
+        result = connect_C(result,findSubTips_C(treeTip,treeMatCol0,treeMatCol1,start));
+        break;
+      }
+      //when node pair does not match tree data. this should be an error.
+      if(j==treeMatCol0.size()-1)
+      {
+        //throw exception("Error in getOutlierFromNodes().");
+        REprintf("Error in getOutlierFromNodes(). Possibly due to a broken tree data.");
+      }
+    }
+  }
+  return(result);
+}
+
 //calculate outlier score
 // [[Rcpp::export]]
 int calcOutScore_C (std::vector<std::string> treeTip,
@@ -556,30 +585,18 @@ int calcOutScore_C (std::vector<std::string> treeTip,
   {
     return(0);
   }
-  int baseCentroid = getBaseCentroid_C(treeTip,treeMatCol0,treeMatCol1,rankCentroid);
-  std::vector<int> centroidToOTU = findNodePath_C(treeTip,treeMatCol0,treeMatCol1,otuTip,baseCentroid);
-  centroidToOTU.erase(std::remove(centroidToOTU.begin(),centroidToOTU.end(),baseCentroid));
+  int baseCore = getBaseCore_C(treeTip,treeMatCol0,treeMatCol1,rankCentroid);
+  std::vector<int> OTUtoCore = findNodePath_C(treeTip,treeMatCol0,treeMatCol1,otuTip,baseCore);
   //when centroid == otuTip, namely monotypic, return(0)
-  if(centroidToOTU.size()==0)
+  if(OTUtoCore.size()==1)
   {
     return(0);
   }
-  int centroidBelowNode = centroidToOTU[centroidToOTU.size() - 1];
-  std::vector<int> checkingnodes = findNodePath_C(treeTip,treeMatCol0,treeMatCol1,otuTip,centroidBelowNode);
-  std::vector<int> maxSubTip;
-  unsigned int size = checkingnodes.size();
-  for(unsigned int i = 0; i < size; ++i)
-  {
-    std::vector<int> temp2 = findSubTips_C(treeTip,treeMatCol0,treeMatCol1,checkingnodes[i]);
-    temp2 = setdiff_C(temp2,dropIndex);
-    if(maxSubTip.size()<temp2.size())
-    {
-      //maxSubTip.resize(temp2.size());
-      //std::copy(temp2.begin(),temp2.end(),maxSubTip.begin());
-      maxSubTip = temp2;
-    }
-  }
-  //return(std::accumulate(maxSubTip.begin(),maxSubTip.end(),0));
+  std::vector<int> maxSubTip = getOutlierFromNodes(treeTip,treeMatCol0,treeMatCol1,OTUtoCore);
+
+  maxSubTip = setdiff_C(maxSubTip,dropIndex);
+  std::sort(maxSubTip.begin(),maxSubTip.end());
+  maxSubTip.erase(std::unique(maxSubTip.begin(),maxSubTip.end()),maxSubTip.end());
   std::vector<std::string> belowNames = multiIndicesString_C(treeTip,maxSubTip);
   //check the below tips belong to the same rank as OTU
   std::vector<std::string> belowRank = getUpperRank_C(belowNames,treeTip,rankList);

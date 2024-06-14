@@ -23,7 +23,7 @@ library(Apoderoides)
 #  calc.Score(tree)
 
 ## -----------------------------------------------------------------------------
-calc.Score(testTree,show_progress=FALSE)[1:10,]
+calc.Score(testTree,show_progress=FALSE)[[1]][1:10,]
 
 ## ----eval=FALSE---------------------------------------------------------------
 #  data("testRankList")

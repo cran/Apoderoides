@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 ```
 
 ## 1 Aim of this package, Apoderoides
-Apoderoides is an R package for finding and deleting erroneous taxa from a phylogenetic tree by calculating scores for each taxa. The score shows how erroneous the taxon and can prioritize which taxon should be deleted first. Apoderoides especially focuses on erroneous taxa caused by taxon mistake or misidentification.
+Apoderoides is an R package for finding and deleting erroneous taxa from a phylogenetic tree by calculating scores for each taxa. The score shows how erroneous the taxon for the monophyly of ranks and can prioritize which taxon should be deleted first. Apoderoides especially focuses on erroneous taxa caused by taxon mistake or misidentification.
 
 
 ## 2 Installation
@@ -58,9 +58,10 @@ calc.Score(testTree)
 calc.Score(tree)
 ```
 
-Here, let's have a look at the top 10 scores of the test tree.
+calc.Score() function returns a list of size two, containing two sets of scores based on the centroid and most recent common ancestor (MRCA) of checking ranks. In the above codes, we are checking the genus rank.
+Here, let's have a look at the top 10 scores of the test tree based on the centroid.
 ```{r}
-calc.Score(testTree,show_progress=FALSE)[1:10,]
+calc.Score(testTree,show_progress=FALSE)[[1]][1:10,]
 ```
 
 The columns of the calculation results show the following information:
@@ -98,7 +99,7 @@ data("testRankList")
 testRankList[[1]][1:10]
 testRankList[[2]][1:10]
 ```
-The rank list is a list of size 2. The first element is equivalent to a character vector of the tree tips (obtained by like `testTree$tip`). The second element is a character vector of the rank names corresponding to the first element of the rank list. In this test data, the rank list indicates the family of the test tree tips. When the tree tips are not scientific names and you want to calculate the score for genus, you can calculate it by setting the genus names in the second element of the rank list.
+The rank list is a list of size 2. The first element is equivalent to a character vector of the tree tips (obtained by, e.g., `testTree$tip`). The second element is a character vector of the rank names corresponding to the first element of the rank list. In this test data, the rank list indicates the family of the test tree tips. When the tree tips are not scientific names and you want to calculate the score for genus, you can calculate it by setting the genus names in the second element of the rank list.
 
 Using this rank list, the score of test tree for family can be calculated by the following command:
 ```{r, eval=FALSE}
@@ -114,7 +115,7 @@ autoDeletion(testTree)
 #for family level
 autoDeletion(testTree,testRankList)
 ```
-The output of `autoDeletion()` is a list of size 3. The first element is the tree without erroneous tips. The second element is a character vector of deleted tree tips. The last element is a lists of scores repeatedly calculated until all the erroneous tips are deleted.
+The output of `autoDeletion()` is a list of size 4. The first element is the tree without erroneous tips. The second element is a character vector of deleted tree tips. The third and fourth elements are lists of centroid-based and MRCA-based scores repeatedly calculated until all the erroneous tips are deleted.
 
 ### 3.4 The other utilities to help analysis
 The functions `calc.Score()` and `autoDeletion()` have arguments of `show_progress` and `num_threads`. `show_progress` is a boolean (TRUE or FALSE) and TRUE by default. When it is TRUE, the progress of calculation is reported on the R console. When it is FALSE, it provides no reports but the calculation will be slightly faster.

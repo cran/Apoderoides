@@ -1,7 +1,16 @@
+ver.2.0.0:
+Added scores based on a most recent common ancestor (MRCA).
+Improved the algorithm for the outlier score calculation.
+Fixed a bug in sorting the clade number. (Formerly, sorted as characters.)
+Fixed a bug in comparing two scores. (Formerly, compared as characters.)
+Fixed typoses in the documents.
+Added a reference to the help document of getAllCentroids function.
+
 ver.1.0.1:
 Fixed a bug which hindered installation of Apoderoides in most MacOSes.
 Added a text about OpenMP for MacOS in the vignette.
 Fixed a bug which might cause unexpected wrap-around in some compilers.
 Added \value to the document of the internal functions.
+
 ver.1.0.0:
 First release.

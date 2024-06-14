@@ -1,5 +1,7 @@
 
 \name{Apoderoides-internal}
+\alias{deleteSubFunc}
+\alias{getRankMRCA}
 \alias{getAllRankNames}
 \alias{findUpperNode}
 \alias{is.monophyleticByRank}
