@@ -1,7 +1,7 @@
-492e825218fe441c2aaf5ce0ded3bf5b *DESCRIPTION
+3805ec16b6c6a4304d1a735737476cd2 *DESCRIPTION
 e7a867ec368f4c75acdb1ea098fe99dc *LICENSE
 28e68c32e7189a3334a80c3013f5cfda *NAMESPACE
-c8701a94fc693b2be130999bd6938117 *NEWS
+15704ef1e9d25fbab76346250a6b64e4 *NEWS
 4a4d126bd02e41ffd772b911db458473 *R/Apoderoides.R
 fb0a569c12f9491493afd69f88cb4b5a *R/RcppExports.R
 0253e4c18e1f9f3f7dad65d9c83ee12f *build/vignette.rds
@@ -9,7 +9,7 @@ d94d41974a0aaabf07f4d2fa53adc5d2 *data/testRankList.RData
 cca806034c8d049a155a6592bf846c82 *data/testTree.RData
 944b1e3345ab31ba035d0d31e04f36cb *inst/doc/vignette.R
 624e9885a6c42f00165cc74eee94a8fe *inst/doc/vignette.Rmd
-ee1297fbbe01c701f21d4cc5f21c6553 *inst/doc/vignette.html
+b2ccc8abf97e21e763c2369d1b8909a9 *inst/doc/vignette.html
 207fcddcabc41d344f649e44e79a1b4b *man/Apoderoides-internal.Rd
 ee22a642f129fdad9440064d639d5b50 *man/autoDeletion.Rd
 e124a2599557378328a2b592efd7a24b *man/calc.Score.Rd
@@ -22,5 +22,5 @@ fd9659f77c03ce17ae2b0aeb09eb05c6 *man/get.upperRank.Rd
 e2d347f9ad519d45dd6bcf3703472671 *src/Makevars
 e2d347f9ad519d45dd6bcf3703472671 *src/Makevars.win
 b2d40a1577cb2538f0f853b199149e1d *src/RcppExports.cpp
-0a70031111bd77c3752f5504003ebca8 *src/source.cpp
+978e44f38caf70ec437a0df44936b22d *src/source.cpp
 624e9885a6c42f00165cc74eee94a8fe *vignettes/vignette.Rmd

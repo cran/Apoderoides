@@ -77,13 +77,10 @@ std::vector<int> connect_C (std::vector<int> vec1,std::vector<int> vec2)
 std::vector<int> rootPathIntersect(std::vector<int> vec1,std::vector<int> vec2)
 {
   std::vector<int> result;
-  result.reserve(std::min(vec1.size(),vec2.size()));
-  for(unsigned int i = 0, size = vec1.size(); i < size; ++i)
+  unsigned int size = std::min(vec1.size(),vec2.size());
+  result.reserve(size);
+  for(unsigned int i = 0; i < size; ++i)
   {
-    if(vec2.size() - 1 -i < 0)
-    {
-      break;
-    }
     //check vec1 and vec2 from the last element (root node)
     if(vec1[vec1.size() - 1 - i]==vec2[vec2.size() -1 - i])
     {

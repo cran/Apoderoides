@@ -1,3 +1,6 @@
+ver.2.0.1
+Fixed a bug causing heap-buffer-overflows. This bug does not change the calculation results.
+
 ver.2.0.0:
 Added scores based on a most recent common ancestor (MRCA).
 Improved the algorithm for the outlier score calculation.
