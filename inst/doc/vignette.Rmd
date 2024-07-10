@@ -115,7 +115,7 @@ autoDeletion(testTree)
 #for family level
 autoDeletion(testTree,testRankList)
 ```
-The output of `autoDeletion()` is a list of size 4. The first element is the tree without erroneous tips. The second element is a character vector of deleted tree tips. The third and fourth elements are lists of centroid-based and MRCA-based scores repeatedly calculated until all the erroneous tips are deleted.
+The output of `autoDeletion()` is a list of size 3. The first element is the tree without erroneous tips. The second element is a character vector of deleted tree tips. The third element is a list of scores repeatedly calculated until all the erroneous tips are deleted.
 
 ### 3.4 The other utilities to help analysis
 The functions `calc.Score()` and `autoDeletion()` have arguments of `show_progress` and `num_threads`. `show_progress` is a boolean (TRUE or FALSE) and TRUE by default. When it is TRUE, the progress of calculation is reported on the R console. When it is FALSE, it provides no reports but the calculation will be slightly faster.

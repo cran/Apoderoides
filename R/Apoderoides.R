@@ -1,3 +1,4 @@
+
 #get MRCAs for all upper ranks in a tree.
 #if a rank is monophyletic, return the tip node number instead of NULL.
 getAllMRCAs<-function(tree,OTUrankData=NULL)
@@ -128,18 +129,49 @@ deleteSubFunc<-function(tree,score,OTUrankData=NULL)
 deleteAnomaly<-function(tree,scores,OTUrankData=NULL,drop=FALSE,prior="MRCA")
 {
   droppingIndex<-list()
-  scores[[1]]<-scores[[1]][order(as.numeric(scores[[1]][,2]),decreasing=T),]
-  scores[[2]]<-scores[[2]][order(as.numeric(scores[[2]][,2]),decreasing=T),]
-
-  topOTUScore<-max(scores[[1]][1,2][[1]],scores[[2]][1,2][[1]])
+  isCentroidScore<-FALSE
+  isMRCAScore<-FALSE
+  if(length(scores[[1]])>0)
+  {
+    isCentroidScore<-TRUE
+  }
+  if(length(scores)>1)
+  {
+    if(length(scores[[2]])>0)
+    {
+      isMRCAScore<-TRUE
+    }
+  }
+  if(isCentroidScore)
+  {
+    scores[[1]]<-scores[[1]][order(as.numeric(scores[[1]][,2]),decreasing=T),]
+    topScore1<-as.numeric(scores[[1]][1,2][[1]])
+  }
+  if(isMRCAScore)
+  {
+    scores[[2]]<-scores[[2]][order(as.numeric(scores[[2]][,2]),decreasing=T),]
+    topScore2<-as.numeric(scores[[2]][1,2][[1]])
+  }
+  if(isMRCAScore&&isCentroidScore)
+  {
+    topOTUScore<-max(topScore1,topScore2)
+  }
+  else if(!isMRCAScore)
+  {
+    topOTUScore<-scores[[1]][1,2][[1]]
+    topScore2<--1
+  }
+  else
+  {
+    topOTUScore<-scores[[2]][1,2][[1]]
+    topScore1<--1
+  }
   #when the top OTU score is 0, return
   if(topOTUScore==0)
   {
     return("No anomaly OTU in the tree.")
   }
   #when centroidScore > MRCAScore, use centroid score
-  topScore1<-as.numeric(scores[[1]][1,2][[1]])
-  topScore2<-as.numeric(scores[[2]][1,2][[1]])
   if(topScore1>topScore2)
   {
     dropOTU<-deleteSubFunc(tree,scores[[1]],OTUrankData)
@@ -190,12 +222,29 @@ deleteAnomaly<-function(tree,scores,OTUrankData=NULL,drop=FALSE,prior="MRCA")
   }
 }
 
-autoDeletion<-function(tree,OTUrankData=NULL,show_progress=TRUE,num_threads=1,prior="MRCA")
+autoDeletion<-function(tree,OTUrankData=NULL,show_progress=TRUE,num_threads=1,prior="MRCA",criteria="composite")
 {
-  if(prior!="MRCA"&&prior!="centroid")
+  if(criteria!="composite")
   {
-    print("'prior' argument must be 'MRCA' or 'centroid'.")
-    return()
+    if(criteria!="MRCA")
+    {
+      if(criteria!="centroid")
+      {
+        if(criteria!="both")
+        {
+          print("'criteria' argument must be 'composite', 'both', 'MRCA' or 'centroid'.")
+          return()
+        }
+        else
+        {
+          if(prior!="MRCA"&&prior!="centroid")
+          {
+            print("'prior' argument must be 'MRCA' or 'centroid'.")
+            return()
+          }
+        }
+      }
+    }
   }
   if(length(tree$tip)<=3)
   {
@@ -207,6 +256,7 @@ autoDeletion<-function(tree,OTUrankData=NULL,show_progress=TRUE,num_threads=1,pr
   }
   totalCentroidScore<-list()
   totalMRCAScore<-list()
+  totalScore<-list()
   droppedOTUs<-character()
   dropIndex<-integer()
   allRankNames<-getAllRankNames(tree,OTUrankData)
@@ -218,8 +268,16 @@ autoDeletion<-function(tree,OTUrankData=NULL,show_progress=TRUE,num_threads=1,pr
   {
     rankList<-get.upperRank(tree$tip)
   }
-  allCentroids<-getAllCentroids(tree,OTUrankData,show_progress,num_threads)
-  allMRCAs<-getAllMRCAs(tree,OTUrankData)
+  allCentroids<-NULL
+  if(criteria!="MRCA")
+  {
+    allCentroids<-getAllCentroids(tree,OTUrankData,show_progress,num_threads)
+  }
+  allMRCAs<-NULL
+  if(criteria!="centroid")
+  {
+    allMRCAs<-getAllMRCAs(tree,OTUrankData)
+  }
   counter<-1
   progress = 0
   firstPositiveScoreOTU = -1
@@ -231,23 +289,40 @@ autoDeletion<-function(tree,OTUrankData=NULL,show_progress=TRUE,num_threads=1,pr
     {
       break
     }
-    scores[[1]]<-calc.Score(tree,OTUrankData,allRankNames,allCentroids,dropIndex,show_progress=show_progress,num_threads=num_threads)[[1]]
-    scores[[2]]<-calc.Score(tree,OTUrankData,allRankNames,allMRCAs,dropIndex,show_progress=show_progress,num_threads=num_threads)[[1]]
+    scores<-calc.Score(tree,OTUrankData,allRankNames,allCentroids,allMRCAs,dropIndex,show_progress=show_progress,num_threads=num_threads,criteria=criteria)
+
     #check the score reached 0
     #somewhat if(scores[[1]][1,2][[1]]==0||scores[[2]][1,2][[1]]==0) gives an error
     if(scores[[1]][1,2][[1]]==0)
     {
       break
     }
-    if(scores[[2]][1,2][[1]]==0)
+    if(criteria=="both")
     {
-      break
+      if(scores[[2]][1,2][[1]]==0)
+      {
+        break
+      }
     }
     if(firstPositiveScoreOTU==-1)
     {
-      firstPositiveScoreOTU<-max(sum(scores[[1]][,2]>0),sum(scores[[2]][,2]>0))
+      if(criteria=="both")
+      {
+        firstPositiveScoreOTU<-max(sum(scores[[1]][,2]>0),sum(scores[[2]][,2]>0))
+      }
+      else
+      {
+        firstPositiveScoreOTU<-sum(scores[[1]][,2]>0)
+      }
     }
-    currentPositiveScoreOTU<-max(sum(scores[[1]][,2]>0),sum(scores[[2]][,2]>0))
+    if(criteria=="both")
+    {
+      currentPositiveScoreOTU<-max(sum(scores[[1]][,2]>0),sum(scores[[2]][,2]>0))
+    }
+    else
+    {
+      currentPositiveScoreOTU<-sum(scores[[1]][,2]>0)
+    }
     if(show_progress)
     {
       print(paste0("auto-deletion loop",counter))
@@ -265,8 +340,15 @@ autoDeletion<-function(tree,OTUrankData=NULL,show_progress=TRUE,num_threads=1,pr
       }
       counter<-counter+1
     }
-    totalCentroidScore<-append(totalCentroidScore,list(scores[[1]]))
-    totalMRCAScore<-append(totalMRCAScore,list(scores[[2]]))
+    if(criteria=="both")
+    {
+      totalCentroidScore<-append(totalCentroidScore,list(scores[[1]]))
+      totalMRCAScore<-append(totalMRCAScore,list(scores[[2]]))
+    }
+    else
+    {
+      totalScore<-append(totalScore,list(scores[[1]]))
+    }
     temp<-deleteAnomaly(tree,scores,OTUrankData)
     droppedOTUs<-append(droppedOTUs,as.vector(temp[[1]]))
     #index of dropped OTU
@@ -277,11 +359,17 @@ autoDeletion<-function(tree,OTUrankData=NULL,show_progress=TRUE,num_threads=1,pr
     #renew centroids
     if(show_progress)
     {
-      print("renewing a centroid")
+      print("renewing a centroid and/or MRCA")
       centroidTime<-proc.time()
     }
-    allCentroids[[lastDropRankIndex]]<-getRankCentroid_C(lastDropRank,dropIndex,tree$tip,tree[[1]][,1],tree[[1]][,2],rankList,show_progress,num_threads)
-    allMRCAs[[lastDropRankIndex]]<-getRankMRCA(lastDropRank,tree,dropIndex,rankList)
+    if(criteria=="both"||criteria=="composite"||criteria=="centroid")
+    {
+      allCentroids[[lastDropRankIndex]]<-getRankCentroid_C(lastDropRank,dropIndex,tree$tip,tree[[1]][,1],tree[[1]][,2],rankList,show_progress,num_threads)
+    }
+    if(criteria=="both"||criteria=="composite"||criteria=="MRCA")
+    {
+      allMRCAs[[lastDropRankIndex]]<-getRankMRCA(lastDropRank,tree,dropIndex,rankList)
+    }
     if(show_progress)
     {
       print(proc.time()-centroidTime)
@@ -293,7 +381,14 @@ autoDeletion<-function(tree,OTUrankData=NULL,show_progress=TRUE,num_threads=1,pr
     print("total time")
     print(proc.time()-calcTime)
   }
-  return(list(resultantTree=tree,droppedOTU=droppedOTUs,centroidScoreTransition=totalCentroidScore,MRCAScoreTransition=totalMRCAScore))
+  if(criteria=="both")
+  {
+    return(list(resultantTree=tree,droppedOTU=droppedOTUs,scoreTransition1=totalCentroidScore,scoreTransition2=totalMRCAScore))
+  }
+  else
+  {
+    return(list(resultantTree=tree,droppedOTU=droppedOTUs,scoreTransition=totalScore))
+  }
 }
 
 getAllRankNames<-function(tree,OTUrankData=NULL)
@@ -339,8 +434,24 @@ is.monophyleticByRank<-function(tree,nodeIndex,OTUrankData)
   return(all(rank[1]==rank))
 }
 
-calc.Score<-function(tree,OTUrankData=NULL,allRankNames=NULL,allCores=NULL,dropIndex=NULL,sort=TRUE,show_progress=TRUE,num_threads=1)
+calc.Score<-function(
+    tree,OTUrankData=NULL,allRankNames=NULL,allCentroids=NULL,allMRCAs=NULL,dropIndex=NULL,sort=TRUE,
+    show_progress=TRUE,num_threads=1,criteria="composite")
 {
+  if(criteria!="composite")
+  {
+    if(criteria!="MRCA")
+    {
+      if(criteria!="centroid")
+      {
+        if(criteria!="both")
+        {
+          print("'criteria' argument must be 'composite', 'both', 'MRCA' or 'centroid'.")
+          return()
+        }
+      }
+    }
+  }
   OTUList<-tree$tip
   intScore<-numeric(length(OTUList))
   outScore<-numeric(length(OTUList))
@@ -351,18 +462,19 @@ calc.Score<-function(tree,OTUrankData=NULL,allRankNames=NULL,allCores=NULL,dropI
   cladeScore<-numeric(length(OTUList))
   #cladeScore/number of OTUs in the clade
   perCladeScore<-numeric(length(OTUList))
-  if(is.null(allCores))
+  scores<-vector("list",2)
+  if(criteria!="both")
   {
-    scores<-vector("list",2)
-    names(scores)<-c("CentroidScore","MRCAScore")
-    allCentroids<-getAllCentroids(tree,OTUrankData,show_progress,num_threads)
-    allMRCAs<-getAllMRCAs(tree,OTUrankData)
-    allCores<-list(allCentroids,allMRCAs)
+    #make list size 1
+    scores[[2]]<-NULL
   }
-  else
+  if(is.null(allCentroids)&&criteria!="MRCA")
   {
-    allCores<-list(allCores)
-    scores<-vector("list",1)
+    allCentroids<-getAllCentroids(tree,OTUrankData,show_progress,num_threads)
+  }
+  if(is.null(allMRCAs)&&criteria!="centroid")
+  {
+    allMRCAs<-getAllMRCAs(tree,OTUrankData)
   }
   if(is.null(dropIndex))
   {
@@ -416,8 +528,26 @@ calc.Score<-function(tree,OTUrankData=NULL,allRankNames=NULL,allCores=NULL,dropI
         }
         nextCladeIndex<-findSubTips_C(tree$tip,tree[[1]][,1],tree[[1]][,2],checkingNode)
       }
-      intscore<-calcIntScore_C(tree$tip,tree[[1]][,1],tree[[1]][,2],OTUList[i],allCores[[j]],allRankNames,OTUrankData[[2]])
-      outscore<-calcOutScore_C(tree$tip,tree[[1]][,1],tree[[1]][,2],OTUList[i],allCores[[j]],allRankNames,OTUrankData[[2]],dropIndex=dropIndex)
+      intCore<-NULL
+      outCore<-NULL
+      if(criteria=="centroid"||(criteria=="both"&&j==1))
+      {
+        intCore<-allCentroids
+        outCore<-allCentroids
+      }
+      if(criteria=="MRCA"||(criteria=="both"&&j==2))
+      {
+        intCore<-allMRCAs
+        outCore<-allMRCAs
+      }
+      if(criteria=="composite")
+      {
+        intCore<-allMRCAs
+        outCore<-allCentroids
+      }
+      intscore<-calcIntScore_C(tree$tip,tree[[1]][,1],tree[[1]][,2],OTUList[i],intCore,allRankNames,OTUrankData[[2]])
+      outscore<-calcOutScore_C(tree$tip,tree[[1]][,1],tree[[1]][,2],OTUList[i],outCore,allRankNames,OTUrankData[[2]],dropIndex=dropIndex)
+
       intScore[cladeIndex]<-intscore
       outScore[cladeIndex]<-outscore
       OTUScore[cladeIndex]<-intscore+outscore

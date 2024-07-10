@@ -12,7 +12,7 @@
 
 <meta name="author" content="Satoshi Aoki" />
 
-<meta name="date" content="2024-06-17" />
+<meta name="date" content="2024-07-10" />
 
 <title>Apoderoides Tutorial</title>
 
@@ -340,7 +340,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Apoderoides Tutorial</h1>
 <h4 class="author"><a href="https://sites.google.com/view/s-aoki">Satoshi Aoki</a></h4>
-<h4 class="date">2024-06-17</h4>
+<h4 class="date">2024-07-10</h4>
 
 
 
@@ -392,15 +392,15 @@ the centroid.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">calc.Score</span>(testTree,<span class="at">show_progress=</span><span class="cn">FALSE</span>)[[<span class="dv">1</span>]][<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,]</span>
 <span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co">#&gt;       OTU                         perCladeOTUScore sum   intruder outlier</span></span>
 <span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt;  [1,] &quot;Araucaria_cunninghamii&quot;    &quot;248&quot;            &quot;248&quot; &quot;0&quot;      &quot;248&quot;  </span></span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt;  [2,] &quot;Thuja_orientalis&quot;          &quot;21&quot;             &quot;21&quot;  &quot;1&quot;      &quot;20&quot;   </span></span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt;  [3,] &quot;Callitropsis_vietnamensis&quot; &quot;7&quot;              &quot;7&quot;   &quot;0&quot;      &quot;7&quot;    </span></span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt;  [4,] &quot;Callitropsis_funebris&quot;     &quot;6&quot;              &quot;6&quot;   &quot;0&quot;      &quot;6&quot;    </span></span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt;  [5,] &quot;Goniophlebium_niponicum&quot;   &quot;5&quot;              &quot;5&quot;   &quot;0&quot;      &quot;5&quot;    </span></span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt;  [6,] &quot;Dryopteris_crassirhizoma&quot;  &quot;4&quot;              &quot;4&quot;   &quot;0&quot;      &quot;4&quot;    </span></span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt;  [7,] &quot;Cyclosorus_dentatus&quot;       &quot;4&quot;              &quot;4&quot;   &quot;1&quot;      &quot;3&quot;    </span></span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt;  [8,] &quot;Juniperus_chinensis&quot;       &quot;3&quot;              &quot;3&quot;   &quot;1&quot;      &quot;2&quot;    </span></span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt;  [9,] &quot;Pteris_vittata&quot;            &quot;2&quot;              &quot;2&quot;   &quot;0&quot;      &quot;2&quot;    </span></span>
-<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; [10,] &quot;Thelypteris_aurita&quot;        &quot;2&quot;              &quot;2&quot;   &quot;0&quot;      &quot;2&quot;    </span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt;  [2,] &quot;Thuja_orientalis&quot;          &quot;22&quot;             &quot;22&quot;  &quot;2&quot;      &quot;20&quot;   </span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt;  [3,] &quot;Callitropsis_vietnamensis&quot; &quot;10&quot;             &quot;10&quot;  &quot;3&quot;      &quot;7&quot;    </span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt;  [4,] &quot;Callitropsis_funebris&quot;     &quot;8&quot;              &quot;8&quot;   &quot;2&quot;      &quot;6&quot;    </span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt;  [5,] &quot;Goniophlebium_niponicum&quot;   &quot;6&quot;              &quot;6&quot;   &quot;1&quot;      &quot;5&quot;    </span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt;  [6,] &quot;Dryopteris_crassirhizoma&quot;  &quot;5&quot;              &quot;5&quot;   &quot;1&quot;      &quot;4&quot;    </span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt;  [7,] &quot;Cyclosorus_dentatus&quot;       &quot;5&quot;              &quot;5&quot;   &quot;2&quot;      &quot;3&quot;    </span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt;  [8,] &quot;Juniperus_chinensis&quot;       &quot;5&quot;              &quot;5&quot;   &quot;3&quot;      &quot;2&quot;    </span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt;  [9,] &quot;Cupressus_duclouxiana&quot;     &quot;4&quot;              &quot;4&quot;   &quot;4&quot;      &quot;0&quot;    </span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; [10,] &quot;Pteris_vittata&quot;            &quot;3&quot;              &quot;3&quot;   &quot;1&quot;      &quot;2&quot;    </span></span>
 <span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt;       #clade</span></span>
 <span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt;  [1,] &quot;136&quot; </span></span>
 <span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt;  [2,] &quot;121&quot; </span></span>
@@ -410,8 +410,8 @@ the centroid.</p>
 <span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="co">#&gt;  [6,] &quot;49&quot;  </span></span>
 <span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="co">#&gt;  [7,] &quot;87&quot;  </span></span>
 <span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co">#&gt;  [8,] &quot;125&quot; </span></span>
-<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="co">#&gt;  [9,] &quot;41&quot;  </span></span>
-<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a><span class="co">#&gt; [10,] &quot;79&quot;</span></span></code></pre></div>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="co">#&gt;  [9,] &quot;126&quot; </span></span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a><span class="co">#&gt; [10,] &quot;41&quot;</span></span></code></pre></div>
 <p>The columns of the calculation results show the following
 information:</p>
 <ul>
@@ -483,11 +483,11 @@ such auto deletion of erroneous taxa for the test tree:</p>
 <span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="fu">autoDeletion</span>(testTree)</span>
 <span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a><span class="co">#for family level</span></span>
 <span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="fu">autoDeletion</span>(testTree,testRankList)</span></code></pre></div>
-<p>The output of <code>autoDeletion()</code> is a list of size 4. The
+<p>The output of <code>autoDeletion()</code> is a list of size 3. The
 first element is the tree without erroneous tips. The second element is
-a character vector of deleted tree tips. The third and fourth elements
-are lists of centroid-based and MRCA-based scores repeatedly calculated
-until all the erroneous tips are deleted.</p>
+a character vector of deleted tree tips. The third element is a list of
+scores repeatedly calculated until all the erroneous tips are
+deleted.</p>
 </div>
 <div id="the-other-utilities-to-help-analysis" class="section level3">
 <h3>3.4 The other utilities to help analysis</h3>
