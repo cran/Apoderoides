@@ -1,3 +1,6 @@
+ver.3.0.1
+Changed C-style cast to static_cast to silence warnings in some compilers.
+
 ver.3.0.0
 Added a new and more effective score calculation method as the default.
 

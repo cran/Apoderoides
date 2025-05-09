@@ -32,7 +32,7 @@ std::vector<int> tip2Root_C (std::vector<std::string> treeTip, std::vector<int> 
   std::vector<int> path(1);
   path[0] = tip;
   //reserve the size assuming that the tree is bifurcating
-  path.reserve((int)log2(treeTip.size()));
+  path.reserve(static_cast<int>(log2(treeTip.size())));
   int upperNode = tip;
   int lowerNode = tip;
   while(upperNode!=rootNode)
@@ -198,7 +198,6 @@ std::vector<int> setdiff_C (std::vector<int> vec1,std::vector<int> vec2)
   for(unsigned int i = 0; i < size1; ++i)
   {
     found = false;
-    //when an element in vec1 is not found in vec2
     for(unsigned int j = 0; j < size2; ++j)
     {
       if(vec1[i]==vec2[j])
@@ -207,6 +206,7 @@ std::vector<int> setdiff_C (std::vector<int> vec1,std::vector<int> vec2)
         break;
       }
     }
+    //when an element in vec1 is not found in vec2
     if(!found)
     {
       diff.push_back(vec1[i]);
@@ -249,16 +249,6 @@ std::vector<int> getRankSubNodes_C (std::vector<std::string> treeTip,
   return(lowerTip);
 }
 
-std::vector<double> castIntVec2DoubleVec(std::vector<int> vec)
-{
-  std::vector<double> result(vec.size());
-  for(unsigned int i = 0, size=vec.size(); i < size;++i)
-  {
-    result[i] = (double)vec[i];
-  }
-  return(result);
-}
-
 //get centroid node of rank. When there are multiple nodes, it means the centroid is the branch between the nodes.
 // [[Rcpp::export]]
 std::vector<double> getRankCentroid_C (std::string rankName, std::vector<int> dropIndex,
@@ -277,7 +267,9 @@ std::vector<double> getRankCentroid_C (std::string rankName, std::vector<int> dr
   //when the rank is monotypic
   if(rankTips.size() == 1)
   {
-    return(castIntVec2DoubleVec(rankTips));
+    std::vector<double> temp(1);
+    temp[0] = static_cast<double>(rankTips[0]);
+    return(temp);
   }
   std::vector<int> rankSubNodes = getRankSubNodes_C(treeTip,treeMatCol0, treeMatCol1,rankTips,rankList);
   std::vector<int> subNodesWithoutTips = setdiff_C(rankSubNodes,rankTips);
